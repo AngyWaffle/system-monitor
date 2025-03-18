@@ -92,7 +92,7 @@ if __name__ == "__main__":
         input("Press Enter to exit...")
     else: # If the installer has ran before
         print("System Monitor is already installed.") # Tell the user the installer has ran before
-        change_values = input("Do you want to change the configuration values? (y/n): ") # Let them change the config values if they want to
+        change_values = input("Do you want to change the configuration values? (y/n): ") # Ask them if they want to change the config values
 
         # If they want to change the values, let them
         if change_values.lower() == "y":

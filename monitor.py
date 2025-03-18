@@ -5,7 +5,6 @@ from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from alarms import get_system_info
-import os
 
 global root
 root = tk.Tk()
