@@ -2,3 +2,5 @@ matplotlib==3.10.1
 psutil==7.0.0
 win10toast==0.9 # If the OS is windows
 winshell==0.6
+
+# Note: Tkinter is part of the Python Standard Library, but may need to be installed separately on some systems.

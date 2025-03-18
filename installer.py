@@ -41,9 +41,9 @@ def set_values():
     monitoring_interval = input("Enter the monitoring interval in seconds (default 1): ")
 
     # Set the minimum time between alerts
-    cpu_interval = input("How often do you want to wait between CPU alerts in seconds (default 20): ")
-    memory_interval = input("How often do you want to wait between memory alerts in seconds (default 20): ")
-    disk_interval = input("How often do you want to wait between disk alerts in seconds (default 600): ")
+    cpu_interval = input("How often do you want to wait between CPU alerts in monitoring intervals (default 20): ")
+    memory_interval = input("How often do you want to wait between memory alerts in monitoring intervals (default 20): ")
+    disk_interval = input("How often do you want to wait between disk alerts in monitoring intervals (default 600): ")
 
     #Write the configuration values to the config.py file, with a default value if none is provided
     with open("config.py", "w") as f:

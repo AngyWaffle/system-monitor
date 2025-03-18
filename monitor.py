@@ -70,7 +70,7 @@ def start_gui():
     )
 
     root.canvas_disk.create_window((0, 0), window=root.scrollable_frame, anchor="nw")
-    root.canvas_disk.configure(yscrollcommand=root.scrollbar.set)
+    root.canvas_disk.configure(yscrollcommand=root.scrollbar.set, highlightthickness=2, highlightbackground="black")
 
     root.canvas_disk.pack(side="left", fill="both", expand=True)
     root.scrollbar.pack(side="right", fill="y")
@@ -78,7 +78,7 @@ def start_gui():
     root.disk_info_label = ttk.Label(root.scrollable_frame, text="", font=("Helvetica", 12), justify="left")
     root.disk_info_label.pack(anchor=tk.W)
 
-    root.geometry("1600x900")
+    root.geometry("1920x1080")
 
     # Start the update loop
     update_info()
@@ -86,7 +86,7 @@ def start_gui():
 
 def update_info():
     """Update the displayed system information."""
-    cpu_usage, memory_info, disk_usages, disks = get_system_info()
+    cpu_usage, memory_info, disk_usages = get_system_info()
 
     # Update labels
     root.cpu_label.config(text=f"\nCPU Usage: {cpu_usage}%")
@@ -94,12 +94,12 @@ def update_info():
                         f"Memory available: {bytes2human(memory_info.available)}B of {bytes2human(memory_info.total)}B\n")
 
     disk_info_text = ""
-    for partition in disks:
-        disk_info_text += (f"  \nDevice: {partition['device']}\n"
-                        f"  Total: {bytes2human(partition['total'])}B\n"
-                        f"  Used: {bytes2human(partition['used'])}B\n"
-                        f"  Free: {bytes2human(partition['free'])}B\n"
-                        f"  Disk Used: {partition['percent']}%\n"
+    for disk_usage in disk_usages:
+        disk_info_text += (f"  \nDevice: {disk_usage['device']}\n"
+                        f"  Total: {bytes2human(disk_usage['total'])}B\n"
+                        f"  Used: {bytes2human(disk_usage['used'])}B\n"
+                        f"  Free: {bytes2human(disk_usage['free'])}B\n"
+                        f"  Disk Used: {disk_usage['percent']}%\n"
                         f"  \n")
 
     root.disk_info_label.config(text=disk_info_text)
