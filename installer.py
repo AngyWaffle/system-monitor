@@ -1,7 +1,8 @@
 import os
 import utils
 import utils.linux_utils
-import utils.windows_utils
+if os.name == 'nt':
+    import utils.windows_utils
 import platform
 import subprocess
 import sys
@@ -31,22 +32,17 @@ def mark_first_run():
 
 # Function to install the required packages
 def install_packages():
-    yn = input("Do you want to install the required packages? (y/n): ")
-
-    if yn.lower() != "y":
-        return
-
     # List of required packages
     packages = [
         "matplotlib",
-        "psutil"
+        "psutil",
+        "tkinter"
     ]
     
     # Add win10toast if OS is windows
     if system == "Windows":
         packages.append("win10toast")
         packages.append("winshell")
-        packages.append("tkinter")
     
     try:
         # Install the packages
@@ -78,7 +74,7 @@ memory_threshold = {memory_threshold if memory_threshold else 80}  # Memory usag
 disk_threshold = {disk_threshold if disk_threshold else 80}  # Disk usage threshold (in percentage)
 monitoring_interval = {monitoring_interval if monitoring_interval else 1}  # Monitoring interval in seconds
 
-# Minimum time between alerts so the user inst spammed
+# Minimum time between alerts so the user isnt spammed
 last_cpu_alert = {cpu_interval if cpu_interval else 20}
 last_memory_alert = {memory_interval if memory_interval else 20}
 last_disk_alert = {disk_interval if disk_interval else 600}
@@ -126,5 +122,9 @@ if __name__ == "__main__":
         # If they want to change the values, let them
         if change_values.lower() == "y":
             set_values()
+            if system == 'Windows':  # Windows
+                utils.windows_utils.add_to_startup_windows()
+            elif system == 'Linux':  # Linux
+                utils.linux_utils.restart_service()
         
         input("Press Enter to exit...")

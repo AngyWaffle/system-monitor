@@ -44,6 +44,14 @@ def add_to_startup_linux():
     except Exception as e:
         print(f"Error with service: {e}")
 
+# Restart service
+def restart_service():
+    try:
+        os.system("sudo systemctl restart monitor-alerts.service")
+        print("Service restarted successfully!")
+    except Exception as e:
+        print(f"Error restarting service: {e}")
+
 # Create a shortcut to the monitor
 def create_linux_shortcut():
     # Get the path where the shortcut will be created
@@ -53,7 +61,7 @@ def create_linux_shortcut():
     # Get the path to the monitor.py and the icon
     script_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(script_dir)
-    monitor_path = os.path.join(parent_dir, "monitor.py")
+    monitor_path = os.path.join(parent_dir, "monitor.pyw")
     icon_path = os.path.join(parent_dir, "favicon.png")
 
     # Make monitor.py executable
@@ -67,7 +75,7 @@ def create_linux_shortcut():
 Version=1.0
 Name=Python System Monitor
 Comment=Monitor system resources
-Exec=env QT_QPA_PLATFORM=wayland /usr/bin/python3 {monitor_path}
+Exec=/usr/bin/python3 {monitor_path} > /dev/null 2>&1
 Icon={icon_path}
 Terminal=true
 Type=Application

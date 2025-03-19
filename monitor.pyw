@@ -120,7 +120,7 @@ def update_info():
     root.ax.plot(root.time_data, root.ram_data, label='RAM Usage (%)', color='green')
     root.ax.set_title('CPU and RAM Usage Over the Last 5 Minutes')
     root.ax.set_ylabel('Usage (%)')
-    root.ax.legend()
+    root.ax.legend(fontsize=14)
     root.ax.grid()
     root.ax.set_ylim(0, 100)
     root.ax.set_xticks([])

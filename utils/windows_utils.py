@@ -15,13 +15,13 @@ def create_windows_shortcut():
     # Get the path where the shortcut will be created
     script_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(script_dir)
-    monitor_path = os.path.join(parent_dir, "monitor.py")
+    monitor_path = os.path.join(parent_dir, "monitor.pyw")
     shortcut_path = os.path.join(winshell.start_menu(), "System Monitor.lnk")
     icon_path = os.path.join(parent_dir, "favicon.ico")
 
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut(shortcut_path)
-    shortcut.Targetpath = f"python {monitor_path}"
+    shortcut.Targetpath = f"pythonw {monitor_path}"
     shortcut.WorkingDirectory = script_dir
     shortcut.IconLocation = icon_path
     shortcut.save()
