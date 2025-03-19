@@ -6,40 +6,41 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from alarms import get_system_info
 
+# Declare root globaly
 global root
 root = tk.Tk()
 
+# Close window
 def on_closing():
-    root.destroy()  # This will close the window
+    root.destroy()
 
+# Build the gui
 def start_gui():
-    """Create the GUI window and start the update loop."""
     root.protocol("WM_DELETE_WINDOW", on_closing)
     root.title("System Monitor")
 
-    # Data storage
+    # Data storage for graph
     root.cpu_data = []
     root.ram_data = []
     root.time_data = []
 
-    # Create frames for organization
+    # Create frame structure
     root.left_frame = ttk.Frame(root)
     root.left_frame.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.BOTH, expand=True)
-
     root.right_frame = ttk.Frame(root)
     root.right_frame.pack(side=tk.RIGHT, padx=10, pady=10, fill=tk.Y)
 
-    # --- Graph Section ---
+    # Create graph frame
     root.graph_frame = ttk.Frame(root.left_frame)
     root.graph_frame.pack(fill=tk.BOTH, expand=True)
 
-    # Create a figure for the graph
+    # Create graph
     root.fig, root.ax = plt.subplots()
     root.canvas = FigureCanvasTkAgg(root.fig, master=root.graph_frame)
     root.canvas_widget = root.canvas.get_tk_widget()
     root.canvas_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-    # --- System Information Section ---
+    # Create labels
     root.system_label = ttk.Label(root.right_frame, text="System Information:", font=("Helvetica", 14, "bold"))
     root.system_label.pack(anchor=tk.W)
 
@@ -49,14 +50,14 @@ def start_gui():
     root.memory_label = ttk.Label(root.right_frame, text="", font=("Helvetica", 12))
     root.memory_label.pack(anchor=tk.W)
 
-    # --- Disk Information Section ---
     root.disk_label = ttk.Label(root.right_frame, text="Disk Information:", font=("Helvetica", 14, "bold"))
     root.disk_label.pack(anchor=tk.W)
 
-    # Create a scrollable frame for disk information
+    # Create disk frame
     root.disk_info_frame = ttk.Frame(root.right_frame)
     root.disk_info_frame.pack(fill=tk.BOTH, expand=True)
 
+    # Make the disk frame scrollable
     root.canvas_disk = tk.Canvas(root.disk_info_frame)
     root.scrollbar = ttk.Scrollbar(root.disk_info_frame, orient="vertical", command=root.canvas_disk.yview)
     root.scrollable_frame = ttk.Frame(root.canvas_disk)
@@ -79,15 +80,15 @@ def start_gui():
 
     root.geometry("1920x1080")
 
-    # Start the update loop
-    update_info()
+    update_info() #Start update loop
     root.mainloop()
 
+# Update the system info
 def update_info():
-    """Update the displayed system information."""
+    # Get current usage
     cpu_usage, memory_info, disk_usages = get_system_info()
 
-    # Update labels
+    # Update the labels
     root.cpu_label.config(text=f"\nCPU Usage: {cpu_usage}%")
     root.memory_label.config(text=f"Memory used: {memory_info.percent}% \n"
                         f"Memory available: {bytes2human(memory_info.available)}B of {bytes2human(memory_info.total)}B\n")
@@ -103,12 +104,11 @@ def update_info():
 
     root.disk_info_label.config(text=disk_info_text)
 
-    # Update graph data
     root.cpu_data.append(cpu_usage)
     root.ram_data.append(memory_info.percent)
     root.time_data.append(time.time())
 
-    # Keep only the last 300 entries
+    # Make the graph contain max 300 entries (About 2.5-5 minutes)
     if len(root.cpu_data) > 300:
         root.cpu_data.pop(0)
         root.ram_data.pop(0)
@@ -125,11 +125,11 @@ def update_info():
     root.ax.set_ylim(0, 100)
     root.ax.set_xticks([])
 
-    # Redraw the canvas
     root.canvas.draw()
 
-    # Schedule the next update
+    # Loop every 0.5 seconds
     root.after(500, lambda:update_info())
 
+# Main function
 if __name__ == "__main__":
     start_gui()

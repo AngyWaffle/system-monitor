@@ -3,12 +3,11 @@ import utils
 import utils.linux_utils
 import utils.windows_utils
 import platform
+import subprocess
+import sys
 
 # Function to create a shortcut for the monitor.py
 def create_shortcut():
-    # Check the OS
-    system = platform.system()
-
     #Check if user wants the monitor script
     shortcut = input("Do you want to install a custom, real time system monitor? (y/n): ")
 
@@ -29,6 +28,32 @@ def mark_first_run():
     # Create the first_run.txt file
     with open("first_run.txt", "w") as f:
         f.write("This file indicates the script has run before.")
+
+# Function to install the required packages
+def install_packages():
+    yn = input("Do you want to install the required packages? (y/n): ")
+
+    if yn.lower() != "y":
+        return
+
+    # List of required packages
+    packages = [
+        "matplotlib",
+        "psutil"
+    ]
+    
+    # Add win10toast if OS is windows
+    if system == "Windows":
+        packages.append("win10toast")
+        packages.append("winshell")
+        packages.append("tkinter")
+    
+    try:
+        # Install the packages
+        for package in packages:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+    except subprocess.CalledProcessError as e:
+        print(f"Error installing package: {e}")
 
 # Set the configuration values
 def set_values():
@@ -64,6 +89,7 @@ last_disk_alert = {disk_interval if disk_interval else 600}
 # Main function
 if __name__ == "__main__":
     #Get the OS
+    global system
     system = platform.system()
 
     # If the OS isnt windows or linux it hasnt been tested and therefore its unsuported
@@ -73,6 +99,9 @@ if __name__ == "__main__":
     
     # Check if the installer has ran before
     if is_first_run():
+        # Install the required packages
+        install_packages()
+
         # Create the shortcut
         create_shortcut()
 
