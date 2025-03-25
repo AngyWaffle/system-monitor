@@ -6,6 +6,7 @@ if os.name == 'nt':
 import platform
 import subprocess
 import sys
+from alarms import get_system_info
 
 # Function to create a shortcut for the monitor.py
 def create_shortcut():
@@ -56,7 +57,27 @@ def set_values():
     # Set the threshold values
     cpu_threshold = input("Enter the CPU threshold percentage (default 80): ")
     memory_threshold = input("Enter the memory threshold percentage (default 80): ")
-    disk_threshold = input("Enter the disk threshold percentage (default 80): ")
+
+    disk_threshold = []
+
+    _, _, disk_usages = get_system_info()
+    disk_names = []
+    for disk in disk_usages:
+        device = disk['device']
+        if device not in disk_names:
+            disk_names.append(device)
+    
+    print(f"Available disks: {', '.join(disk_names)}")
+    
+    for disk in disk_usages:
+        print(f"Device: {disk['device']}")
+        
+        device_threshold = input(f"Enter the disk threshold for {disk['device']} in percentage (default 80): ")
+        partition_threshold = {'device': disk['device'], 'threshold': device_threshold if device_threshold else 80}
+        disk_threshold.append(partition_threshold)
+
+    # Set the default disk threshold
+    default_disk_threshold = input("Enter the default disk threshold in percentage (default 80): ")
 
     # Set the monitoring interval
     monitoring_interval = input("Enter the monitoring interval in seconds (default 1): ")
@@ -71,8 +92,10 @@ def set_values():
         f.write(f"""# Configuration settings for the system monitor
 cpu_threshold = {cpu_threshold if cpu_threshold else 80}  # CPU usage threshold (in percentage)
 memory_threshold = {memory_threshold if memory_threshold else 80}  # Memory usage threshold (in percentage)
-disk_threshold = {disk_threshold if disk_threshold else 80}  # Disk usage threshold (in percentage)
+default_disk_threshold = {default_disk_threshold if default_disk_threshold else 80}  # Disk usage threshold (in percentage) default
 monitoring_interval = {monitoring_interval if monitoring_interval else 1}  # Monitoring interval in seconds
+
+disk_threshold = {disk_threshold} # Disk thresholds for each partition
 
 # Minimum time between alerts so the user isnt spammed
 last_cpu_alert = {cpu_interval if cpu_interval else 20}
@@ -111,9 +134,10 @@ if __name__ == "__main__":
                 utils.linux_utils.add_to_startup_linux()
 
         # Mark the first run
-        mark_first_run()
+        #mark_first_run()
         
         print("System Monitor installed successfully!")
+        mark_first_run()
         input("Press Enter to exit...")
     else: # If the installer has ran before
         print("System Monitor is already installed.") # Tell the user the installer has ran before

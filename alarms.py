@@ -4,6 +4,8 @@ import os
 import subprocess
 import psutil
 import platform
+import re
+import ast
 # Library unavaiable on Linux so only import on Windows
 if os.name == 'nt':
     from win10toast import ToastNotifier
@@ -82,12 +84,23 @@ def check_alarms():
         current_devices = {disk['device'] for disk in disk_usages}
         last_disk_alerts = {device: alert_time for device, alert_time in last_disk_alerts.items() if device in current_devices}
 
+        # Find devices in config.disk_threshold but not in disk_usages
+        missing_devices = set(config.disk_threshold) - current_devices
+
+        # Handle missing devices
+        for device in missing_devices:
+            send_alarm(f"Disk {device} is no longer detected. It may have been removed or disconnected. If it is no longer needed, remove it from the config file by running the installer.")
+
         # Add new devices to the disk alert list
         for disk_usage in disk_usages:
             device = disk_usage['device']
             if device not in last_disk_alerts:
                 last_disk_alerts[device] = config.last_disk_alert
-
+            randomvar = filter_by_device(config.disk_threshold, device)
+            if randomvar == []:
+                config.disk_threshold.append({'device': device, 'threshold': config.default_disk_threshold})
+                send_alarm(f"New disk detected: {device} \n Using default value. To change disk threshold run the installer.")
+                
         # Check if CPU usage is above the threshold
         if cpu_usage > config.cpu_threshold and last_cpu_alert > config.last_cpu_alert:
             trigger_alarm("CPU", cpu_usage)
@@ -102,13 +115,20 @@ def check_alarms():
         for disk_usage in disk_usages:
             # Get the disk
             device = disk_usage['device']
+            
+            disk = filter_by_device(config.disk_threshold, device)
+            disk = disk[0]
+            disk_threshold = int(disk['threshold'])
             # Check if the disk usage is above the threshold
-            if disk_usage['percent'] > config.disk_threshold and last_disk_alerts[device] > config.last_disk_alert:
+            if disk_usage['percent'] > disk_threshold and last_disk_alerts[device] > config.last_disk_alert:
                 trigger_alarm("Disk", f"{disk_usage['device']} ({disk_usage['percent']:.1f}%)")
                 last_disk_alerts[device] = 0 # Reset that disks time since last alert
         
         # Wait for the monitoring interval
         time.sleep(config.monitoring_interval)
+
+def filter_by_device(data, device_type):
+    return [item for item in data if item['device'] == device_type]
 
 # Start the alarms
 def start_alarms():
@@ -132,6 +152,7 @@ def main():
 # Start the script
 if __name__ == "__main__":
     # Get the os
+    global system
     system = platform.system()
 
     # Kill the script if not Windows or Linux
