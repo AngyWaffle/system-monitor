@@ -71,7 +71,7 @@ def check_alarms():
     # Loop forever
     while True:
         # Update the time since last alert
-        global last_cpu_alert, last_memory_alert, last_disk_alerts
+        global last_cpu_alert, last_memory_alert, last_disk_alerts, disk_threshold
         last_cpu_alert += 1
         last_memory_alert += 1
         for disk in last_disk_alerts:
@@ -85,20 +85,33 @@ def check_alarms():
         last_disk_alerts = {device: alert_time for device, alert_time in last_disk_alerts.items() if device in current_devices}
 
         # Find devices in config.disk_threshold but not in disk_usages
-        missing_devices = set(config.disk_threshold) - current_devices
+        threshold_devices = {disk['device'] for disk in disk_threshold}
+        missing_devices = threshold_devices - current_devices
 
         # Handle missing devices
         for device in missing_devices:
-            send_alarm(f"Disk {device} is no longer detected. It may have been removed or disconnected. If it is no longer needed, remove it from the config file by running the installer.")
+            device2 = filter_by_device(disk_threshold, device)
+            print(device2)
+            if device2 != []:
+                device2 = device2[0]
+                if device2 in config.disk_threshold:
+                    send_alarm(f"Disk {device} is no longer detected. It may have been removed or disconnected. If it is no longer needed, remove it from the config file by running the installer.")
+                elif device2 in disk_threshold:
+                    send_alarm(f"Disk {device} is no longer detected. It may have been removed or disconnected.")
+                else:
+                    send_alarm("Something really funny happened when a device was removed, and this code doesnt know how to handle that...")
+                disk_threshold.remove(device2)
+            else:
+                send_alarm("Something really funny happened when a device was removed, and this code doesnt know how to handle that...")
 
         # Add new devices to the disk alert list
         for disk_usage in disk_usages:
             device = disk_usage['device']
             if device not in last_disk_alerts:
                 last_disk_alerts[device] = config.last_disk_alert
-            randomvar = filter_by_device(config.disk_threshold, device)
+            randomvar = filter_by_device(disk_threshold, device)
             if randomvar == []:
-                config.disk_threshold.append({'device': device, 'threshold': config.default_disk_threshold})
+                disk_threshold.append({'device': device, 'threshold': config.default_disk_threshold})
                 send_alarm(f"New disk detected: {device} \n Using default value. To change disk threshold run the installer.")
                 
         # Check if CPU usage is above the threshold
@@ -116,26 +129,29 @@ def check_alarms():
             # Get the disk
             device = disk_usage['device']
             
-            disk = filter_by_device(config.disk_threshold, device)
+            disk = filter_by_device(disk_threshold, device)
             disk = disk[0]
-            disk_threshold = int(disk['threshold'])
+            that_disk_threshold = int(disk['threshold'])
             # Check if the disk usage is above the threshold
-            if disk_usage['percent'] > disk_threshold and last_disk_alerts[device] > config.last_disk_alert:
+            if disk_usage['percent'] > that_disk_threshold and last_disk_alerts[device] > config.last_disk_alert:
                 trigger_alarm("Disk", f"{disk_usage['device']} ({disk_usage['percent']:.1f}%)")
                 last_disk_alerts[device] = 0 # Reset that disks time since last alert
         
         # Wait for the monitoring interval
         time.sleep(config.monitoring_interval)
 
+# Function to get device dict based on device name
 def filter_by_device(data, device_type):
     return [item for item in data if item['device'] == device_type]
 
 # Start the alarms
 def start_alarms():
     # Declare the variables for alarm cooldown as global
-    global last_cpu_alert, last_memory_alert, last_disk_alerts
+    global last_cpu_alert, last_memory_alert, last_disk_alerts, disk_threshold
     last_cpu_alert = config.last_cpu_alert
     last_memory_alert = config.last_memory_alert
+    print(config.disk_threshold)
+    disk_threshold = config.disk_threshold.copy()
     last_disk_alerts = {}
 
     # Start the monitoring
